@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CodeFix - Advanced Code Analysis</title>
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --text-color: #212529;
+      --primary-color: #4a90e2;
+      --primary-hover: #357ab8;
+      --secondary-color: #6c757d;
+      --border-color: #ced4da;
+      --card-bg: #ffffff;
+      --input-bg: #ffffff;
+      --output-bg: #e6f0ff;
+      --output-border: #4a90e2;
+    }
+
+    .dark-mode {
+      --bg-color: #1a1a1a;
+      --text-color: #f8f9fa;
+      --primary-color: #5a9de2;
+      --primary-hover: #4a8ac8;
+      --secondary-color: #8a93a2;
+      --border-color: #495057;
+      --card-bg: #2d2d2d;
+      --input-bg: #3d3d3d;
+      --output-bg: #2a3a4a;
+      --output-border: #5a9de2;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      font-size: 32px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      margin-bottom: 30px;
+      text-align: center;
+      color: var(--secondary-color);
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      font-family: inherit;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      resize: vertical;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      box-sizing: border-box;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      flex: 1;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button.secondary {
+      background-color: var(--secondary-color);
+    }
+
+    button.secondary:hover {
+      background-color: #5a6268;
+    }
+
+    .output {
+      margin-top: 20px;
+      background-color: var(--output-bg);
+      padding: 20px;
+      border: 1px solid var(--output-border);
+      border-radius: 8px;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .output-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+    }
+
+    .history {
+      margin-top: 30px;
+    }
+
+    .history-item {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .history-item:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .history-item.dark-mode:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .history-item pre {
+      margin: 5px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+    }
+
+    .history-item .timestamp {
+      font-size: 12px;
+      color: var(--secondary-color);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .error-marker {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .warning-marker {
+      color: #ffc107;
+      font-weight: bold;
+    }
+
+    .suggestion-marker {
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      .button-group {
+        flex-direction: column;
+      }
+      
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <span class="logo-icon">💡</span>
+        <span>CodeFix</span>
+      </div>
+      <div class="controls">
+        <button class="theme-toggle" id="themeToggle">🌓</button>
+      </div>
+    </header>
+
+    <h1>Find issues in your code — instantly.</h1>
+    <p class="subtitle">Paste your code below and get advanced static analysis with fixes and suggestions.</p>
+
+    <div class="card">
+      <div class="form-group">
+        <label for="languageSelect">Programming Language</label>
+        <select id="languageSelect">
+          <option value="javascript">JavaScript</option>
+          <option value="python">Python</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="java">Java</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="codeInput">Your Code</label>
+        <textarea id="codeInput" placeholder="Paste your code here..."></textarea>
+      </div>
+
+      <div class="button-group">
+        <button id="analyzeBtn">Analyze Code</button>
+        <button class="secondary" id="clearBtn">Clear</button>
+      </div>
+    </div>
+
+    <div class="output" id="outputBox">
+      <div class="output-title">
+        <span>Analysis Results</span>
+        <button class="copy-btn" id="copyBtn">Copy</button>
+      </div>
+      <div id="outputText"></div>
+    </div>
+
+    <div class="history" id="historySection" style="display: none;">
+      <h3>Previous Analyses</h3>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <script>
+    // Enhanced static analysis rules
+    const analysisRules = {
+      javascript: [
+        {
+          pattern: /console\.log\(.*\)/g,
+          message: "⚠️ Debug statements: Remove console.log() before production deployment.",
+          severity: "warning"
+        },
+        {
+          pattern: /==/g,
+          message: "🔍 Type coercion: Consider using === instead of == for strict equality checking.",
+          severity: "error"
+        },
+        {
+          pattern: /var\s+\w+/g,
+          message: "🔄 Variable declaration: Prefer let/const over var for better scoping.",
+          severity: "warning"
+        },
+        {
+          pattern: /for\s*\(.*;\s*;\s*\)/,
+          message: "❌ Infinite loop: This for loop has no exit condition and will run forever.",
+          severity: "error"
+        },
+        {
+          pattern: /eval\(/g,
+          message: "🚨 Security risk: Avoid using eval() as it can execute arbitrary code.",
+          severity: "error"
+        },
+        {
+          pattern: /document\.write\(/g,
+          message: "📝 DOM manipulation: Avoid document.write() as it can block page rendering.",
+          severity: "warning"
+        }
+      ],
+      python: [
+        {
+          pattern: /print\(.*\)/g,
+          message: "⚠️ Debug statements: Remove print() statements before production deployment.",
+          severity: "warning"
+        },
+        {
+          pattern: /except:/g,
+          message: "🔍 Broad exception: Avoid bare except clauses, specify exception types.",
+          severity: "error"
+        },
+        {
+          pattern: /\.append\(.*\)\s*\.append\(.*\)/g,
+          message: "🔄 Chained appends: Consider extending with a single list operation.",
+          severity: "warning"
+        },
+        {
+          pattern: /while\s+True:/g,
+          message: "❌ Infinite loop: Add a break condition to this while True loop.",
+          severity: "error"
+        },
+        {
+          pattern: /import\s+\*/g,
+          message: "📦 Import practice: Avoid wildcard imports for better code clarity.",
+          severity: "warning"
+        },
+        {
+          pattern: /input\(.*\)/g,
+          message: "🔐 Security note: Be cautious with input() as it evaluates user input in Python 2.",
+          severity: "warning"
+        }
+      ],
+      html: [
+        {
+          pattern: /<style[^>]*>.*<\/style>/gs,
+          message: "🎨 CSS practice: Consider moving styles to external stylesheets.",
+          severity: "suggestion"
+        },
+        {
+          pattern: /<script[^>]*>.*<\/script>/gs,
+          message: "📜 JavaScript practice: Consider moving scripts to external files.",
+          severity: "suggestion"
+        },
+        {
+          pattern: /<img[^>]+(?!alt=)/g,
+          message: "🖼️ Accessibility: Add alt attributes to all img tags for screen readers.",
+          severity: "error"
+        },
+        {
+          pattern: /<div[^>]*>\s*<\/div>/g,
+          message: "📦 Empty div: Consider if this empty container is necessary.",
+          severity: "warning"
+        },
+        {
+          pattern: /<table/g,
+          message: "📊 Table usage: Only use tables for tabular data, not for layout.",
+          severity: "warning"
+        },
+        {
+          pattern: /<br\s*\/?>\s*<br\s*\/?>/g,
+          message: "↩️ Line breaks: Multiple <br> tags often indicate poor spacing control.",
+          severity: "warning"
+        }
+      ],
+      css: [
+        {
+          pattern: /!important/g,
+          message: "💪 Specificity: Avoid !important as it makes CSS harder to maintain.",
+          severity: "warning"
+        },
+        {
+          pattern: /#\w{6}/g,
+          message: "🎨 Color codes: Consider using named colors or variables for maintainability.",
+          severity: "suggestion"
+        },
+        {
+          pattern: /width:\s*\d+px/g,
+          message: "📱 Responsiveness: Consider using relative units (%, vw, rem) instead of fixed pixels.",
+          severity: "warning"
+        },
+        {
+          pattern: /@import/g,
+          message: "⚡ Performance: @import blocks parallel downloads, use <link> instead.",
+          severity: "warning"
+        },
+        {
+          pattern: /,\s*}/g,
+          message: "🔍 Syntax error: Trailing comma in CSS selector list.",
+          severity: "error"
+        },
+        {
+          pattern: /:\s*;/g,
+          message: "🔍 Syntax error: Empty CSS property value.",
+          severity: "error"
+        }
+      ],
+      java: [
+        {
+          pattern: /System\.out\.println\(/g,
+          message: "⚠️ Debug statements: Remove print statements before production deployment.",
+          severity: "warning"
+        },
+        {
+          pattern: /==\s*(?!null)/g,
+          message: "🔍 Object comparison: Use .equals() for object comparison, not ==.",
+          severity: "error"
+        },
+        {
+          pattern: /catch\s*\(Exception\s*\w*\)/g,
+          message: "🔍 Broad exception: Catch more specific exceptions than just Exception.",
+          severity: "warning"
+        },
+        {
+          pattern: /new\s+ArrayList/g,
+          message: "🔄 Diamond operator: Use the diamond operator <> for generic type inference.",
+          severity: "suggestion"
+        },
+        {
+          pattern: /public\s+class/g,
+          message: "📂 File organization: Ensure public class name matches filename.",
+          severity: "warning"
+        },
+        {
+          pattern: /@SuppressWarnings/g,
+          message: "🔕 Warning suppression: Avoid suppressing warnings without good reason.",
+          severity: "warning"
+        }
+      ]
+    };
+
+    // DOM Elements
+    const codeInput = document.getElementById('codeInput');
+    const languageSelect = document.getElementById('languageSelect');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const outputBox = document.getElementById('outputBox');
+    const outputText = document.getElementById('outputText');
+    const copyBtn = document.getElementById('copyBtn');
+    const themeToggle = document.getElementById('themeToggle');
+    const historySection = document.getElementById('historySection');
+    const historyList = document.getElementById('historyList');
+
+    // App state
+    let isDarkMode = localStorage.getItem('darkMode') === 'true';
+    let analysisHistory = JSON.parse(localStorage.getItem('analysisHistory')) || [];
+
+    // Initialize the app
+    function init() {
+      updateTheme();
+      renderHistory();
+      
+      analyzeBtn.addEventListener('click', analyzeCode);
+      clearBtn.addEventListener('click', clearCode);
+      copyBtn.addEventListener('click', copyOutput);
+      themeToggle.addEventListener('click', toggleTheme);
+      
+      const lastCode = localStorage.getItem('lastCode');
+      if (lastCode) {
+        codeInput.value = lastCode;
+      }
+    }
+
+    // Analyze code function
+    function analyzeCode() {
+      const code = codeInput.value.trim();
+      const language = languageSelect.value;
+      
+      if (!code) {
+        showOutput('Please enter some code to analyze.', false);
+        return;
+      }
+      
+      localStorage.setItem('lastCode', code);
+      showOutput('Analyzing your code...', true);
+      
+      setTimeout(() => {
+        const analysis = performStaticAnalysis(code, language);
+        addToHistory(code, analysis);
+        showOutput(analysis, true);
+      }, 500);
+    }
+
+    // Perform static analysis
+    function performStaticAnalysis(code, language) {
+      if (!analysisRules[language]) {
+        return `No analysis rules available for ${language}. Try selecting a different language.`;
+      }
+
+      let results = [];
+      const rules = analysisRules[language];
+      
+      rules.forEach(rule => {
+        const matches = code.match(rule.pattern);
+        if (matches) {
+          results.push({
+            message: rule.message,
+            severity: rule.severity,
+            count: matches.length
+          });
+        }
+      });
+
+      if (results.length === 0) {
+        return "✅ No common issues detected!\n\nFor more advanced analysis, consider using an AI-powered code review tool with an API key.";
+      }
+
+      // Group by severity
+      const grouped = {
+        error: [],
+        warning: [],
+        suggestion: []
+      };
+
+      results.forEach(result => {
+        grouped[result.severity].push(result);
+      });
+
+      let output = '';
+      
+      if (grouped.error.length > 0) {
+        output += "❌ Errors found:\n";
+        grouped.error.forEach(item => {
+          output += `- ${item.message} (found ${item.count} time${item.count > 1 ? 's' : ''})\n`;
+        });
+        output += "\n";
+      }
+
+      if (grouped.warning.length > 0) {
+        output += "⚠️ Warnings:\n";
+        grouped.warning.forEach(item => {
+          output += `- ${item.message} (found ${item.count} time${item.count > 1 ? 's' : ''})\n`;
+        });
+        output += "\n";
+      }
+
+      if (grouped.suggestion.length > 0) {
+        output += "💡 Suggestions:\n";
+        grouped.suggestion.forEach(item => {
+          output += `- ${item.message} (found ${item.count} time${item.count > 1 ? 's' : ''})\n`;
+        });
+        output += "\n";
+      }
+
+      output += "\nNote: This is a basic static analysis. For more comprehensive results, consider using an AI-powered code review service.";
+
+      return output;
+    }
+
+    // Show output
+    function showOutput(content, isSuccessful) {
+      outputText.innerHTML = content;
+      outputBox.style.display = "block";
+    }
+
+    // Clear code
+    function clearCode() {
+      codeInput.value = "";
+      outputBox.style.display = "none";
+      localStorage.removeItem('lastCode');
+    }
+
+    // Copy output
+    function copyOutput() {
+      navigator.clipboard.writeText(outputText.textContent)
+        .then(() => {
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+          }, 2000);
+        });
+    }
+
+    // Toggle theme
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      localStorage.setItem('darkMode', isDarkMode);
+      updateTheme();
+    }
+
+    // Update theme
+    function updateTheme() {
+      document.body.classList.toggle('dark-mode', isDarkMode);
+      themeToggle.textContent = isDarkMode ? "🌞" : "🌙";
+    }
+
+    // Add to history
+    function addToHistory(code, analysis) {
+      const timestamp = new Date().toLocaleString();
+      analysisHistory.unshift({ code, analysis, timestamp });
+      if (analysisHistory.length > 10) analysisHistory.pop();
+      localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+      renderHistory();
+    }
+
+    // Render history
+    function renderHistory() {
+      if (analysisHistory.length === 0) {
+        historySection.style.display = "none";
+        return;
+      }
+
+      historySection.style.display = "block";
+      historyList.innerHTML = "";
+
+      analysisHistory.forEach((item, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.className = `history-item ${isDarkMode ? 'dark-mode' : ''}`;
+        
+        const codePreview = document.createElement('pre');
+        codePreview.textContent = item.code.split('\n')[0].substring(0, 50) + 
+                                 (item.code.length > 50 ? '...' : '');
+        
+        const timestamp = document.createElement('div');
+        timestamp.className = 'timestamp';
+        timestamp.textContent = item.timestamp;
+        
+        historyItem.appendChild(codePreview);
+        historyItem.appendChild(timestamp);
+        
+        historyItem.addEventListener('click', () => {
+          codeInput.value = item.code;
+          showOutput(item.analysis, true);
+        });
+        
+        historyList.appendChild(historyItem);
+      });
+    }
+
+    // Initialize the app
+    init();
+  </script>
+</body>
+</html>
